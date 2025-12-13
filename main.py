@@ -67,7 +67,7 @@ def go(config: DictConfig):
         # Data check step
         if "data_check" in active_steps:
             _ = mlflow.run(
-            os.path.join(hydra.utils.get_original_cwd(), "src", "data_main"),
+            os.path.join(hydra.utils.get_original_cwd(), "src", "data_check"),
             "main",
             parameters={
                 # required artifacts
