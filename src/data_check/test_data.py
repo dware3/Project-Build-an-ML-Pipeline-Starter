@@ -83,7 +83,24 @@ def test_similar_neigh_distrib(data: pd.DataFrame, ref_data: pd.DataFrame, kl_th
     kl_div = scipy.stats.entropy(dist1, dist2, base=2)
     assert np.isfinite(kl_div) and kl_div < kl_threshold
 
-
 ########################################################
 # Implement here test_row_count and test_price_range   #
 ########################################################
+
+def test_row_count(data):
+    # Validate that the dataset contains a reasonable number of rows
+    #
+    # data : pandas DataFrame provided by the test fixture (closure)
+    assert 15000 < data.shape[0] < 1_000_000
+
+
+def test_price_range(data, min_price, max_price):
+    # Verify that all values in the 'price' column fall within the allowed range
+    # defined by min_price and max_price (inclusive).
+    #
+    # data       : pandas DataFrame provided by the test fixture (closure)
+    # min_price  : minimum acceptable price for a listing
+    # max_price  : maximum acceptable price for a listing
+    assert data["price"].between(min_price, max_price).all(), (
+        f"Found prices outside range [{min_price}, {max_price}]"
+    )
