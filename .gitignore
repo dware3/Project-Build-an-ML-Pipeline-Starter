@@ -147,3 +147,4 @@ random_forest_dir/
 multirun/
 rf_config.json
 wandb_test/
+wandb_test/
