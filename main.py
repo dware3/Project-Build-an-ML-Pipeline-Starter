@@ -43,49 +43,64 @@ def go(config: DictConfig):
                 env_manager="conda",
                 parameters={
                     "sample": config["etl"]["sample"],
-                    "artifact_name": "sample.csv",
-                    "artifact_type": "raw_data",
-                    "artifact_description": "Raw file as downloaded"
+                    "artifact_name": config["download"]["artifact_name"],
+                    "artifact_type": config["download"]["artifact_type"],
+                    "artifact_description": config["download"]["artifact_description"],
                 },
             )
 
         # Basic data cleaning step
         if "basic_cleaning" in active_steps:
             _ = mlflow.run(
-            os.path.join(hydra.utils.get_original_cwd(), "src", "basic_cleaning"),
-            "main",
-            parameters={
-                "input_artifact": config["basic_cleaning"]["input_artifact"],   # e.g. "sample.csv:latest"
-                "output_artifact": config["basic_cleaning"]["output_artifact"], # e.g. "clean_sample.csv"
-                "output_type": config["basic_cleaning"]["output_type"],         # e.g. "clean_sample"
-                "output_description": config["basic_cleaning"]["output_description"],
-                "min_price": config["basic_cleaning"]["min_price"],
-                "max_price": config["basic_cleaning"]["max_price"],
-            },
-        )
+                os.path.join(
+                    hydra.utils.get_original_cwd(),
+                    "src",
+                    "basic_cleaning",
+                    ),
+                    "main",
+                    env_manager="conda",
+                    parameters={
+                        "input_artifact": config["basic_cleaning"]["input_artifact"],
+                        "output_artifact": config["basic_cleaning"]["output_artifact"],
+                        "output_type": config["basic_cleaning"]["output_type"],
+                        "output_description": config["basic_cleaning"]["output_description"],
+                        "min_price": config["etl"]["min_price"],
+                        "max_price": config["etl"]["max_price"],
+                    },
+                )
 
         # Data check step
         if "data_check" in active_steps:
             _ = mlflow.run(
-            os.path.join(hydra.utils.get_original_cwd(), "src", "data_check"),
-            "main",
-            parameters={
-                # required artifacts
-                "csv": "clean_sample.csv:latest",
-                "ref": "clean_sample.csv:reference",
+                os.path.join(
+                    hydra.utils.get_original_cwd(),
+                    "src",
+                    "data_check",
+                ),
+                "main",
+                env_manager="conda",
+                parameters={
+                    "csv": config["data_check"]["csv"],
+                    "ref": config["data_check"]["ref"],
+                    "kl_threshold": config["data_check"]["kl_threshold"],
+                    "min_price": config["etl"]["min_price"],
+                    "max_price": config["etl"]["max_price"],
+                },
+            )
 
-                # parameters from config.yaml
-                "kl_threshold": config["data_check"]["kl_threshold"],
-                "min_price": config["etl"]["min_price"],
-                "max_price": config["etl"]["max_price"],
-            },
-        )
-
+        # Data split step
         if "data_split" in active_steps:
-            ##################
-            # Implement here #
-            ##################
-            pass
+            _ = mlflow.run(
+               f"{config['main']['components_repository']}/train_val_test_split",
+               "main",
+               env_manager="conda",
+               parameters={
+                   "input": "clean_sample.csv:latest",
+                   "test_size": config["modeling"]["test_size"],
+                   "random_seed": config["modeling"]["random_seed"],
+                   "stratify_by": config["modeling"]["stratify_by"],
+                },
+            )
 
         if "train_random_forest" in active_steps:
 

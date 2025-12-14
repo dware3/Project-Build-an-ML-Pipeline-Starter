@@ -9,7 +9,18 @@ etl:
   sample: "sample1.csv"
   min_price: 10  # dollars
   max_price: 350  # dollars
+download:
+  artifact_name: "sample.csv"
+  artifact_type: "raw_data"
+  artifact_description: "Raw file as downloaded"
+basic_cleaning:
+  input_artifact: "sample.csv:latest"
+  output_artifact: "clean_sample.csv"
+  output_type: "clean_sample"
+  output_description: "Cleaned dataset after price filtering"
 data_check:
+  csv: "clean_sample.csv:latest"
+  ref: "clean_sample.csv:reference"
   kl_threshold: 0.2
 modeling:
   # Fraction of data to use for test (the remaining will be used for train and validation)
